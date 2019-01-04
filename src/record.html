@@ -20,16 +20,16 @@
             <div class="img-wrap">
                 <h5>图片预览区域</h5>
                 <div class="img-list" id="imgWrap">
-
+                    暂无截图
                 </div>
-                <p>点击图片即可下载</p>
+                <p class="tips">点击图片即可下载<b class="batch-download" id="batchDownloadPics">批量下载</b></p>
             </div>
             <div class="record-wrap">
                     <h5>录像预览区域</h5>
                     <div class="video-list" id="videoWrap">
-    
+                        暂无视频
                     </div>
-                    <p>点击视频即可下载</p>
+                    <p class="tips">点击视频即可下载<b class="batch-download" id="batchDownloadVideos">批量下载</b></p>
                 </div>
         </div>
         <div class="operation">
@@ -48,6 +48,8 @@
             </div>
         </div>
     </div>
+    <script src="./js/jszip.js"></script>
+    <script src="./js/FileSaver.js"></script>
     <script src="./js/createRandomStr.js"></script>
     <script src="./js/event.js"></script>
 </body>

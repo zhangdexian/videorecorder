@@ -11,7 +11,8 @@ var openCamera = document.getElementById('openCamera'), // 打开摄像头
     vedio = document.getElementById('vedio'), // 视频播放组件
     videoWrap = document.getElementById('videoWrap'), // 视频预览
     clearVideo = document.getElementById('clearVideo'), // 清空视频预览
-
+    batchDownloadPics = document.getElementById('batchDownloadPics'), // 批量下载图片
+    batchDownloadVideos = document.getElementById('batchDownloadVideos'), // 批量下载视频
     // 获取媒体对象配置
     container = {
         audio: true,
@@ -26,7 +27,9 @@ var openCamera = document.getElementById('openCamera'), // 打开摄像头
     mediaStream,
     mediaRecorder, // 视频录制
     recordTimer, // 视频录制的计时器
-    chunks = [], // 录制的视频数据
+    chunks = '', // 录制的视频数据
+    allScreenShots = [],  // 所有的截图
+    allSavedVedio = [],
     recordTime = 0; // 视频录制时间
 
 //访问用户媒体设备的兼容方法
@@ -77,6 +80,7 @@ function getCanVas() {
 function base64ToBlob(urlData, type) {
     let arr = urlData.split(',');
     let mime = arr[0].match(/:(.*?);/)[1] || type; // match方法的使用  
+    // allScreenShots.push(arr[1]);
     // 去掉url的头，并转化为byte
     let bytes = window.atob(arr[1]);
     // 处理异常,将ascii码小于0的转换为大于0
@@ -129,12 +133,20 @@ cutPic.onclick = function () {
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
     let imgData = canvas.toDataURL("image/png");
     let imgBlob = base64ToBlob(imgData);
+    allScreenShots.push(imgBlob);
     let download = document.createElement('a');
     download.download = randomWord() + '.png';
     download.href = window.URL.createObjectURL(imgBlob);
     let img = new Image();
     img.onload = function () {
-        imgWrap.appendChild(img);
+        // TEXT_NODE 3 表示文本节点
+        if (imgWrap.firstChild.nodeType === document.TEXT_NODE) {
+            imgWrap.replaceChild(img, imgWrap.firstChild);
+            // 或者是
+            // imgWrap.removeChild(imgWrap.firstChild);
+        } else {
+            imgWrap.appendChild(img);
+        }
         img.onload = null;
     };
     img.onclick = function () {
@@ -145,7 +157,15 @@ cutPic.onclick = function () {
 
 // 清空所有截图
 clearPic.onclick = function () {
-    imgWrap.innerHTML = '';
+    // TEXT_NODE 3 表示文本节点
+    if (imgWrap.firstChild.nodeType === document.TEXT_NODE) {
+        alert('当前还没有截图哦~');
+        return false;
+    }
+    if (window.confirm('确定要清空所有截图吗？')) {
+        imgWrap.innerHTML = '暂无截图';
+        allScreenShots = [];
+    }
 }
 
 // 视频录制
@@ -164,8 +184,8 @@ function initVideoRecord() {
         mediaRecorder = new MediaRecorder(mediaStream);
         mediaRecorder.ondataavailable = function (e) {
             // e.data是一个Blob对象
-            console.log(e.data);
-            chunks.push(e.data);
+            // console.log(e.data);
+            chunks = e.data;
             createVideoData();
         }
         mediaRecorder.start();
@@ -216,11 +236,20 @@ function createVideoData() {
     videoTag.width = video.width / 3;
     videoTag.height = video.height / 3;
     videoTag.controls = true;
-    let src = window.URL.createObjectURL(chunks[0]);
-    chunks = [];
+    // chunk 为Blob对象 
+    allSavedVedio.push(chunks);
+    let src = window.URL.createObjectURL(chunks);
+    chunks = '';
     mediaRecorder = null;
     videoTag.src = src;
-    videoWrap.appendChild(videoTag);
+    // TEXT_NODE 3 表示文本节点
+    if (videoWrap.firstChild.nodeType === document.TEXT_NODE) {
+        videoWrap.replaceChild(videoTag, videoWrap.firstChild);
+        // 或者是
+        // videoWrap.removeChild(videoWrap.firstChild);
+    } else {
+        videoWrap.appendChild(videoTag);
+    }
     let link = document.createElement('a');
     // let downloadName = randomWord() + '.ogg';   ogg默认用网页打开
     let downloadName = randomWord() + '.flv';
@@ -233,7 +262,15 @@ function createVideoData() {
 
 // 清空视频预览
 clearVideo.onclick = function () {
-    videoWrap.innerHTML = '';
+    // TEXT_NODE 3 表示文本节点
+    if (videoWrap.firstChild.nodeType === document.TEXT_NODE) {
+        alert('当前还没有视频哦~');
+        return false;
+    }
+    if (window.confirm('确定要清空所有视频吗？')) {
+        allSavedVedio = [];
+        videoWrap.innerHTML = '暂无视频';
+    }
 }
 
 
@@ -257,4 +294,67 @@ function setRecordTime() {
         recordTime += 1;
         videoCapture.innerHTML = '视频录制（已录制' + recordTime + 's)';
     }, 1000);
+}
+
+// 批量下载图片
+batchDownloadPics.onclick = function () {
+    if (!allScreenShots.length) {
+        alert('还没有添加任何截图！！！');
+        return false;
+    }
+    zipUtils('png', allScreenShots);
+    // test();
+}
+
+// 批量下载视频
+batchDownloadVideos.onclick = function () {
+    if (!allSavedVedio.length) {
+        alert('还没有添加任何视频！！！');
+        return false;
+    }
+    zipUtils('flv', allSavedVedio);
+}
+
+
+/* 
+*   批量下载的函数的封装
+*   @param type 
+*   @param data
+*   @param options
+*/
+function zipUtils(type, data, options) {
+    var resultName = type === 'png' ? 'screen_shots.zip' : 'vedio_collect.zip';
+    var zip = new JSZip();
+    data.forEach(chunk => {
+        let fileName = randomWord() + '.' + type;
+        zip.file(fileName,chunk, options);
+    })
+    zip.generateAsync({
+            type: "blob"
+        })
+        .then(function (content) {
+            // see FileSaver.js
+            saveAs(content, resultName);
+             //content 是个Blob对象 type 是application/zip
+            // console.log(content);  
+        });
+}
+
+function test() {
+    var zip = new JSZip();
+    // var img = zip.folder("images");
+    // img.file("smile.gif", imgData, {
+    //     base64: true
+    // });
+    zip.file('1.txt', 'hello world');
+    zip.file('2.txt', 'hello world');
+    zip.generateAsync({
+            type: "blob"
+        })
+        .then(function (content) {
+            // see FileSaver.js
+            saveAs(content, 'example.zip');
+             //content 是个Blob对象 type 是application/zip
+            // console.log(content);  
+        });
 }
