@@ -14,6 +14,7 @@ var openCamera = document.getElementById('openCamera'), // 打开摄像头
 
     // 获取媒体对象配置
     container = {
+        audio: true,
         video: {
             width: 480,
             height: 320
@@ -104,14 +105,26 @@ openCamera.onclick = function () {
 
 // 关闭摄像头
 closeCamera.onclick = function () {
-    mediaStream.getTracks()[0].stop();
-    // video.pause();
-    video.src = '';
-    video.load(); // 重新加载视频资源  否则将会显示黑色背景
+    if (mediaStream) {
+        mediaStream.getTracks().forEach(track => {
+            track.stop();
+        })
+        mediaStream = null;
+        // video.pause();
+        video.src = '';
+        video.load(); // 重新加载视频资源  否则将会显示黑色背景
+    } else {
+        alert('未检测到摄像头！');
+    }
+
 }
 
 //截图
 cutPic.onclick = function () {
+    if (!mediaStream) {
+        alert('未检测到视频资源！请先打开摄像头');
+        return false;
+    }
     //绘制画面
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
     let imgData = canvas.toDataURL("image/png");
@@ -137,6 +150,11 @@ clearPic.onclick = function () {
 
 // 视频录制
 videoCapture.onclick = function () {
+    initVideoRecord();
+}
+
+// 视频录制初始化
+function initVideoRecord() {
     if (recordTimer) {
         alert('当前有视频正在录制，不能重新开始！');
         return false;
@@ -152,48 +170,69 @@ videoCapture.onclick = function () {
         }
         mediaRecorder.start();
         setRecordTime();
+    } else {
+        alert('未检测到摄像头，请先打开摄像头！');
     }
 }
 
 // 暂停录制
 pause.onclick = function () {
+    if (!mediaRecorder) {
+        alert('操作无效，未检测到摄像头！');
+        return false;
+    }
+    if (mediaRecorder.state !== 'recording') {
+        alert('当前不是录制状态，无法执行暂停操作！！');
+        return false;
+    }
     clearInterval(recordTimer);
     mediaRecorder && mediaRecorder.pause();
 }
 
 // 恢复录制
 start.onclick = function () {
+    if (!mediaRecorder) {
+        initVideoRecord();
+        return;
+    }
     setRecordTime();
     mediaRecorder && mediaRecorder.resume();
 }
 
 // 停止录制并保存视频
 stop.onclick = function () {
+    if (!mediaRecorder) {
+        alert('操作无效，未检测到摄像头！');
+        return false;
+    }
     mediaRecorder && mediaRecorder.stop();
     clearTimer();
+    mediaRecorder = null;
 }
 
 // 保存视频数据  显示在视频区域
 function createVideoData() {
     let videoTag = document.createElement('video');
-    videoTag.width = video.width/3;
-    videoTag.height = video.height/3;
+    videoTag.width = video.width / 3;
+    videoTag.height = video.height / 3;
     videoTag.controls = true;
     let src = window.URL.createObjectURL(chunks[0]);
     chunks = [];
+    mediaRecorder = null;
     videoTag.src = src;
     videoWrap.appendChild(videoTag);
     let link = document.createElement('a');
+    // let downloadName = randomWord() + '.ogg';   ogg默认用网页打开
     let downloadName = randomWord() + '.flv';
     link.download = downloadName;
     link.href = src;
-    videoTag.onclick = function() {
+    videoTag.onclick = function () {
         link.click();
     }
 }
 
 // 清空视频预览
-clearVideo.onclick = function() {
+clearVideo.onclick = function () {
     videoWrap.innerHTML = '';
 }
 
