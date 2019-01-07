@@ -12,8 +12,10 @@ function randomWord(randomFlag=false, min=32, max){
         range = Math.round(Math.random() * (max-min)) + min;
     }
     for(var i=0; i<range; i++){
-        pos = Math.round(Math.random() * (arr.length-1));
+        let pos = Math.round(Math.random() * (arr.length-1));
         str += arr[pos];
     }
     return str;
 }
+
+export default randomWord;
