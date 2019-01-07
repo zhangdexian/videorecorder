@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>视频录制</title>
+</head>
+<body>
+    <div>
+        <div class="content">
+            <div class="video-wrap">
+                <h5>视频显示区域</h5>
+                <video id="video">
+                    您的设备不支持设备播放组件，请使用其它浏览器访问。
+                </video>
+            </div>
+            <div class="img-wrap">
+                <h5>图片预览区域</h5>
+                <div class="img-list" id="imgWrap">
+                    暂无截图
+                </div>
+                <p class="tips">点击图片即可下载<b class="batch-download" id="batchDownloadPics">批量下载</b></p>
+            </div>
+            <div class="record-wrap">
+                    <h5>录像预览区域</h5>
+                    <div class="video-list" id="videoWrap">
+                        暂无视频
+                    </div>
+                    <p class="tips">点击视频即可下载<b class="batch-download" id="batchDownloadVideos">批量下载</b></p>
+                </div>
+        </div>
+        <div class="operation">
+            <h5>操作</h5>
+            <div class="btn-group">
+                <button id="openCamera">打开摄像头</button>
+                <button id="closeCamera">关闭摄像头</button>
+                <button id="cutPic">截图</button>
+                <button id="clearPic">清空所有截图</button>
+                <button id="videoCapture">视频录制</button>
+                <button id="pause">暂停录制</button>
+                <button id="start">开始录制</button>
+                <button id="stop">停止录制</button>
+                <button id="clearVideo">清空视频</button>
+                <!-- <button id="save">保存录像</button> -->
+            </div>
+        </div>
+    </div>
+<script type="text/javascript" src="app.bundle.js"></script></body>
+
+</html>
